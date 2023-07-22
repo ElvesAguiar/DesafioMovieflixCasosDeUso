@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MovieService {
@@ -24,31 +23,37 @@ public class MovieService {
 
 
     @Transactional(readOnly = true)
-    public Page<MovieCardDTO> findAll(Long genreId,Pageable pageable) {
-        List<MovieCardDTO> dtos= new ArrayList<>();
-        if(genreId.equals(0L)) {
-             dtos = repository.findAll().
-                    stream().sorted((m, a) -> m.getTitle().compareTo(a.getTitle())).map(x -> new MovieCardDTO(x))
-                    .toList();
-        }else {
-            dtos=repository.getMoviesByGenre_Id(genreId)
+    public Page<MovieCardDTO> findAll(Long genreId, Pageable pageable) {
+        List<MovieCardDTO> dtos;
+        if (genreId.equals(0L)) {
+            List<Movie> toSort = new ArrayList<>();
+            for (Movie x : repository.findAll()) {
+                toSort.add(x);
+            }
+            toSort.sort((m, a) -> m.getTitle().compareTo(a.getTitle()));
+            List<MovieCardDTO> list = new ArrayList<>();
+            for (Movie x : toSort) {
+                MovieCardDTO movieCardDTO = new MovieCardDTO(x);
+                list.add(movieCardDTO);
+            }
+            dtos = list;
+        } else {
+            dtos = repository.getMoviesByGenre_Id(genreId)
                     .stream().sorted((m, a) -> m.getTitle().compareTo(a.getTitle()))
-                    .map(x -> new MovieCardDTO(x))
+                    .map(MovieCardDTO::new)
                     .toList();
         }
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), dtos.size());
         List<MovieCardDTO> pageList = dtos.subList(start, end);
 
-        Page<MovieCardDTO> page = new PageImpl<>(pageList, pageable, dtos.size());
-        return page;
+        return new PageImpl<>(pageList, pageable, dtos.size());
     }
 
     @Transactional(readOnly = true)
     public MovieDetailsDTO findById(Long id) {
-        Optional<Movie > entity= repository.findById(id);
-        if (entity.isEmpty()) throw new ResourceNotFoundException("Resource not found");
-        return new MovieDetailsDTO(entity.get());
+        return repository.findById(id).map(MovieDetailsDTO::new)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource no found"));
     }
 
 }
