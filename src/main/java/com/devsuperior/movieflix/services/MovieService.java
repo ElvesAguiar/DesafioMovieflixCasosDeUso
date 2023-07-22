@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,11 +20,18 @@ public class MovieService {
 
 
     @Transactional(readOnly = true)
-    public Page<MovieCardDTO> findAll(Pageable pageable) {
-        List<MovieCardDTO> dtos = repository.findAll().
-                stream().sorted((m ,a)-> m.getTitle().compareTo(a.getTitle())).map(x -> new MovieCardDTO(x))
-                .toList();
-
+    public Page<MovieCardDTO> findAll(Long genreId,Pageable pageable) {
+        List<MovieCardDTO> dtos= new ArrayList<>();
+        if(genreId.equals(0L)) {
+             dtos = repository.findAll().
+                    stream().sorted((m, a) -> m.getTitle().compareTo(a.getTitle())).map(x -> new MovieCardDTO(x))
+                    .toList();
+        }else {
+            dtos=repository.getMoviesByGenre_Id(genreId)
+                    .stream().sorted((m, a) -> m.getTitle().compareTo(a.getTitle()))
+                    .map(x -> new MovieCardDTO(x))
+                    .toList();
+        }
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), dtos.size());
         List<MovieCardDTO> pageList = dtos.subList(start, end);
