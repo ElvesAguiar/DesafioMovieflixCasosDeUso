@@ -2,6 +2,7 @@ package com.devsuperior.movieflix.services;
 
 import com.devsuperior.movieflix.dto.MovieCardDTO;
 import com.devsuperior.movieflix.dto.MovieDetailsDTO;
+import com.devsuperior.movieflix.dto.ReviewDTO;
 import com.devsuperior.movieflix.entities.Movie;
 import com.devsuperior.movieflix.repositories.MovieRepository;
 import com.devsuperior.movieflix.services.exceptions.ResourceNotFoundException;
@@ -56,4 +57,10 @@ public class MovieService {
                 .orElseThrow(() -> new ResourceNotFoundException("Resource no found"));
     }
 
+    @Transactional(readOnly = true)
+    public List<ReviewDTO> findReview(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource no found"))
+                .getReviews().stream().map(ReviewDTO::new).toList();
+    }
 }

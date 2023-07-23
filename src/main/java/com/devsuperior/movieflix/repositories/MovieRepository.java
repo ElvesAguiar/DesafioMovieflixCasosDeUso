@@ -11,4 +11,5 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
 public List<Movie> getMoviesByGenre_Id(Long id);
 
+
 }
